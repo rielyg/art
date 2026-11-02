@@ -13,6 +13,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -26,14 +27,21 @@ SNAP_DIR = ROOT / "data" / "snapshots"
 
 
 def get(url, params):
-    if os.environ.get("OPENALEX_API_KEY"):
-        params["api_key"] = os.environ["OPENALEX_API_KEY"]
+    headers = {"User-Agent": "paper-mosaic"}
+    key = os.environ.get("OPENALEX_API_KEY", "").strip()
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
     if os.environ.get("OPENALEX_MAILTO"):
         params["mailto"] = os.environ["OPENALEX_MAILTO"]
-    full = url + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(full, headers={"User-Agent": "paper-mosaic"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+    full = url + ("?" + urllib.parse.urlencode(params) if params else "")
+    req = urllib.request.Request(full, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:500]
+        hint = "" if key else " No OPENALEX_API_KEY secret is set; list requests from GitHub runners need one."
+        raise SystemExit(f"OpenAlex returned HTTP {e.code} for {url}: {body}{hint}")
 
 
 def group_for(topic):
