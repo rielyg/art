@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Mosaic | Gregory J. Riely</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #120f24; color: #f4f1ff;
+    font-family: "Helvetica Neue", Arial, sans-serif; text-align: left; }
+  #wrap { position: relative; width: 100vmin; height: 100vmin; margin: 0 auto; }
+  canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #tip { position: fixed; pointer-events: none; background: #f4f1ff; color: #120f24;
+    padding: 6px 9px; border-radius: 4px; font-size: 13px; display: none; }
+  #legend { max-width: 100vmin; margin: 12px auto 32px; padding: 0 3.5vmin; font-size: 13px; line-height: 1.6; }
+  #legend a { color: #9fd8ff; }
+  body.render #legend, body.render #tip { display: none; }
+  body.render #wrap { width: auto; height: auto; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c"></canvas></div>
+<div id="tip"></div>
+<div id="legend">
+  Each cell is one paper. Area scales with citations (OpenAlex). Hue follows publication year and rotates
+  slightly each week. Thick borders separate five-year eras. Pattern marks topic: solid for treatment and
+  mutation papers, stripes for diagnosis, pathology and guidelines, dots for genomics, rings for immunotherapy,
+  crosshatch for other topics. A starburst marks a paper cited this week, one ray per new citation.
+  Hover for details, click to open the paper in OpenAlex. <a href="gallery.html">Past weeks</a>
+</div>
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/d3-weighted-voronoi.min.js"></script>
+<script src="vendor/d3-voronoi-map.min.js"></script>
+<script src="vendor/d3-voronoi-treemap.min.js"></script>
+<script src="vendor/seedrandom.min.js"></script>
+<script src="mosaic.js"></script>
+<script>
+(async function () {
+  const q = new URLSearchParams(location.search);
+  const renderMode = q.has("render");
+  if (renderMode) document.body.classList.add("render");
+  const data = await (await fetch("data/papers.json", { cache: "no-store" })).json();
+
+  // Demo mode: invent weekly citations so the starburst layer can be previewed
+  if (q.has("demo")) {
+    const r = new Math.seedrandom("demo");
+    data.works.forEach((w) => { w[4] = r() < 0.12 ? 1 + Math.floor(r() * r() * 9) : 0; });
+  }
+
+  const canvas = document.getElementById("c");
+  const size = renderMode ? +(q.get("size") || 2000)
+    : Math.round(Math.min(innerWidth, innerHeight) * (devicePixelRatio || 1));
+  canvas.width = size; canvas.height = size;
+  if (renderMode) { canvas.style.width = size + "px"; canvas.style.height = size + "px"; }
+
+  const out = Mosaic.render(canvas, data, { seed: q.get("seed") || undefined });
+  window.__mosaicDone = true;
+  if (renderMode) return;
+
+  const tip = document.getElementById("tip");
+  const hit = (ev) => {
+    const b = canvas.getBoundingClientRect();
+    const p = [(ev.clientX - b.left) * canvas.width / b.width, (ev.clientY - b.top) * canvas.height / b.height];
+    return out.leaves.find((l) => l.polygon && d3.polygonContains(l.polygon, p));
+  };
+  canvas.addEventListener("mousemove", (ev) => {
+    const l = hit(ev);
+    if (!l) { tip.style.display = "none"; return; }
+    const w = l.data;
+    tip.innerHTML = `${w.year} | ${w.cites.toLocaleString("en-US")} citations` +
+      (w.fresh ? ` | +${w.fresh} this week` : "") + `<br>${Mosaic.GROUPS[w.group]}`;
+    tip.style.left = ev.clientX + 14 + "px"; tip.style.top = ev.clientY + 14 + "px";
+    tip.style.display = "block";
+  });
+  canvas.addEventListener("mouseleave", () => (tip.style.display = "none"));
+  canvas.addEventListener("click", (ev) => {
+    const l = hit(ev);
+    if (l) window.open("https://openalex.org/" + l.data.id, "_blank");
+  });
+})();
+</script>
+</body>
+</html>

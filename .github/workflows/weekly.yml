@@ -1,0 +1,65 @@
+name: Weekly mosaic
+
+on:
+  schedule:
+    - cron: "23 11 * * 1"   # Mondays 11:23 UTC
+  workflow_dispatch:         # run by hand from the Actions tab
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: mosaic
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch citations from OpenAlex
+        env:
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+          OPENALEX_MAILTO: ${{ secrets.OPENALEX_MAILTO }}
+        run: python scripts/fetch_openalex.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Render image
+        run: node scripts/render.mjs --size 2400
+
+      - name: Commit data and image
+        run: |
+          git config user.name "mosaic-bot"
+          git config user.email "mosaic-bot@users.noreply.github.com"
+          git add site data
+          git commit -m "Mosaic for $(date -u +%F)" || echo "nothing to commit"
+          git push
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

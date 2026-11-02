@@ -1,0 +1,10 @@
+{
+  "name": "paper-mosaic",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch": "python scripts/fetch_openalex.py",
+    "render": "node scripts/render.mjs --size 2400",
+    "demo": "node scripts/render.mjs --size 2400 --demo"
+  }
+}
