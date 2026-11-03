@@ -11,6 +11,10 @@
     O: "Other topics",
   };
 
+  // Sunrise palette: rose, coral, tangerine, amber, butter, peach, lilac, morning blue
+  const SUNRISE = ["#ff6f91", "#ff8c6b", "#ffa552", "#ffc65c", "#ffe08a", "#ffb8a1", "#d9a7e0", "#9cc7f0"];
+  const sunrise = d3.interpolateRgbBasisClosed(SUNRISE);
+
   function weekOfYear(dateStr) {
     const d = new Date(dateStr + "T00:00:00Z");
     const start = Date.UTC(d.getUTCFullYear(), 0, 1);
@@ -44,7 +48,7 @@
       .minWeightRatio(0.01)(root);
 
     // Background
-    ctx.fillStyle = "#120f24";
+    ctx.fillStyle = "#24162f";
     ctx.fillRect(0, 0, W, H);
 
     const yearMin = 2004, yearMax = 2027;
@@ -56,14 +60,12 @@
       if (!poly) return;
       const t = (w.year - yearMin) / (yearMax - yearMin);
       const hue = (((t + hueShift + rand(-0.035, 0.035)) % 1) + 1) % 1;
-      const baseC = d3.hsl(d3.interpolateSinebow(hue));
-      baseC.s = Math.min(1, baseC.s * rand(0.95, 1.1));
-      baseC.l = rand(0.5, 0.62);
+      const baseC = d3.hsl(sunrise(hue));
+      baseC.s = Math.min(1, baseC.s * rand(0.9, 1.05));
+      baseC.l = Math.max(0.55, Math.min(0.85, baseC.l + rand(-0.05, 0.04)));
       const base = baseC.formatHex();
-      const deep = d3.hsl(baseC.h + 18, baseC.s, baseC.l * 0.72).formatHex();
-      const acc = d3.hsl(d3.interpolateSinebow((hue + rand(0.4, 0.6)) % 1));
-      acc.l = Math.min(0.85, acc.l + 0.18);
-      const accent = acc.formatHex();
+      const deep = d3.hsl(baseC.h - 12, baseC.s, baseC.l * 0.86).formatHex();
+      const accent = d3.hsl(baseC.h + rand(-20, 20), baseC.s * 0.6, Math.min(0.96, baseC.l + 0.14)).formatHex();
       const [cx, cy] = d3.polygonCentroid(poly);
       const r = Math.sqrt(Math.abs(d3.polygonArea(poly)));
 
@@ -86,13 +88,13 @@
       ctx.strokeStyle = accent;
       ctx.fillStyle = accent;
       const step = Math.max(6, r * rand(0.08, 0.14));
-      if (w.group === "D") stripes(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.35);
-      else if (w.group === "G") dots(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.22);
+      if (w.group === "D") stripes(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.2);
+      else if (w.group === "G") dots(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.15);
       else if (w.group === "I") rings(ctx, cx, cy, r, step);
       else if (w.group === "O") {
         const a = rand(0, Math.PI);
-        stripes(ctx, cx, cy, r, step, a, step * 0.18);
-        stripes(ctx, cx, cy, r, step, a + Math.PI / 2, step * 0.18);
+        stripes(ctx, cx, cy, r, step, a, step * 0.1);
+        stripes(ctx, cx, cy, r, step, a + Math.PI / 2, step * 0.1);
       }
 
       // Papers that gained citations this week get a burst with one ray per citation
@@ -104,7 +106,7 @@
 
     // Paper borders
     ctx.lineJoin = "round";
-    ctx.strokeStyle = "#120f24";
+    ctx.strokeStyle = "#24162f";
     ctx.lineWidth = Math.max(2, W / 600);
     leaves.forEach((leaf) => { if (leaf.polygon) { tracePoly(ctx, leaf.polygon); ctx.stroke(); } });
     // Outer frame
@@ -115,11 +117,7 @@
       ctx.fillStyle = "#f4f1ff";
       ctx.font = `${Math.round(footer * 0.42)}px "Helvetica Neue", Arial, sans-serif`;
       ctx.textBaseline = "middle";
-      ctx.textAlign = "left";
       const y = H - m * 0.7 - footer / 2;
-      const n = works.length.toLocaleString("en-US");
-      const total = data.total_citations.toLocaleString("en-US");
-      ctx.fillText(`${n} papers  |  ${total} citations`, m, y);
       ctx.textAlign = "right";
       ctx.fillText(`week of ${data.snapshot_date}`, W - m, y);
     }
@@ -139,7 +137,7 @@
     ctx.translate(cx, cy);
     ctx.rotate(angle);
     ctx.lineWidth = width;
-    ctx.globalAlpha = 0.75;
+    ctx.globalAlpha = 0.4;
     for (let x = -r * 2; x <= r * 2; x += step) {
       ctx.beginPath(); ctx.moveTo(x, -r * 2); ctx.lineTo(x, r * 2); ctx.stroke();
     }
@@ -150,7 +148,7 @@
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
-    ctx.globalAlpha = 0.85;
+    ctx.globalAlpha = 0.45;
     for (let x = -r * 2; x <= r * 2; x += step)
       for (let y = -r * 2; y <= r * 2; y += step) {
         ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
@@ -160,8 +158,8 @@
 
   function rings(ctx, cx, cy, r, step) {
     ctx.save();
-    ctx.lineWidth = step * 0.3;
-    ctx.globalAlpha = 0.75;
+    ctx.lineWidth = step * 0.16;
+    ctx.globalAlpha = 0.4;
     for (let rr = step; rr < r * 2; rr += step) {
       ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
     }
