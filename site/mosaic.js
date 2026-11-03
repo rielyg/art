@@ -17,14 +17,6 @@
     return Math.floor((d - start) / (7 * 864e5));
   }
 
-  function era(year) {
-    if (year < 2005) return "before 2005";
-    if (year < 2010) return "2005-2009";
-    if (year < 2015) return "2010-2014";
-    if (year < 2020) return "2015-2019";
-    return "2020 on";
-  }
-
   function render(canvas, data, opts = {}) {
     const W = canvas.width, H = canvas.height;
     const ctx = canvas.getContext("2d");
@@ -35,12 +27,9 @@
     const week = weekOfYear(data.snapshot_date);
     const hueShift = (week * 0.02) % 1; // palette rotates a little each week
 
-    // Build hierarchy: root -> era -> paper
+    // Flat hierarchy: every paper competes for space in one mosaic
     const works = data.works.map(([id, year, cites, group, fresh]) => ({ id, year, cites, group, fresh }));
-    const byEra = d3.group(works, (w) => era(w.year));
-    const tree = {
-      children: Array.from(byEra, ([name, list]) => ({ name, children: list })),
-    };
+    const tree = { children: works };
     const root = d3.hierarchy(tree).sum((d) => (d.cites ? Math.pow(d.cites, exponent) : 0));
 
     const m = Math.round(Math.min(W, H) * 0.035);
@@ -118,9 +107,8 @@
     ctx.strokeStyle = "#120f24";
     ctx.lineWidth = Math.max(2, W / 600);
     leaves.forEach((leaf) => { if (leaf.polygon) { tracePoly(ctx, leaf.polygon); ctx.stroke(); } });
-    // Era borders
+    // Outer frame
     ctx.lineWidth = Math.max(5, W / 220);
-    root.children.forEach((c) => { tracePoly(ctx, c.polygon); ctx.stroke(); });
     tracePoly(ctx, clip); ctx.stroke();
 
     if (opts.caption !== false) {
@@ -131,7 +119,7 @@
       const y = H - m * 0.7 - footer / 2;
       const n = works.length.toLocaleString("en-US");
       const total = data.total_citations.toLocaleString("en-US");
-      ctx.fillText(`${data.author_name}  |  ${n} papers  |  ${total} citations`, m, y);
+      ctx.fillText(`${n} papers  |  ${total} citations`, m, y);
       ctx.textAlign = "right";
       ctx.fillText(`week of ${data.snapshot_date}`, W - m, y);
     }

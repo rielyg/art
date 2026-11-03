@@ -76,8 +76,8 @@ def fetch_all_works():
     return works
 
 
-def latest_snapshot():
-    snaps = sorted(SNAP_DIR.glob("*.json"))
+def latest_snapshot(today):
+    snaps = sorted(p for p in SNAP_DIR.glob("*.json") if p.stem < today)
     return json.loads(snaps[-1].read_text()) if snaps else {}
 
 
@@ -87,7 +87,7 @@ def main():
     works = [w for w in fetch_all_works() if w.get("type") not in SKIP_TYPES]
     works.sort(key=lambda w: w["cited_by_count"], reverse=True)
 
-    prev = latest_snapshot()
+    prev = latest_snapshot(today)
     counts = {w["id"].rsplit("/", 1)[-1]: w["cited_by_count"] for w in works}
 
     rows = []

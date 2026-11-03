@@ -1,11 +1,10 @@
 # Paper Mosaic
 
-Generative art from Gregory J. Riely's citation record. Each week a GitHub Action pulls citation counts from OpenAlex, draws a new mosaic, saves it to the gallery, and publishes the site to GitHub Pages.
+Generative art from a citation record. Each week a GitHub Action pulls citation counts from OpenAlex, draws a new mosaic, saves it to the gallery, and publishes the site to GitHub Pages.
 
 ## How the image encodes the data
 
 - Each cell is one paper (the 200 most cited, configurable). Cell area scales with total citations.
-- Thick borders separate five-year eras of publication.
 - Hue follows publication year. The whole palette rotates a little each week.
 - Pattern marks the OpenAlex primary topic: solid for lung cancer treatment and mutation papers, stripes for diagnosis, pathology and guidelines, dots for genomics, rings for immunotherapy, crosshatch for other topics.
 - A starburst marks a paper that gained citations since the last run, one ray per new citation. This layer starts after the second weekly run, once there is a previous snapshot to compare against.
