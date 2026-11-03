@@ -27,13 +27,6 @@ scripts/
 .github/workflows/weekly.yml
 ```
 
-## Setup
-
-1. Create a GitHub repository and push this folder to it.
-2. Settings > Pages > Build and deployment > Source: GitHub Actions.
-3. Get a free OpenAlex API key at https://openalex.org/settings/api. Then Settings > Secrets and variables > Actions > New repository secret, named `OPENALEX_API_KEY`. Without a key, OpenAlex refuses the works list request from GitHub's runners (HTTP 401). A weekly run uses well under a cent of the free daily allowance.
-4. Actions tab > Weekly mosaic > Run workflow, to produce the first image without waiting for Monday.
-
 ## Running locally
 
 ```
