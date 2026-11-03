@@ -22,9 +22,7 @@
 <div id="tip"></div>
 <div id="legend">
   Each cell is one paper. Area scales with citations (OpenAlex). Hue follows publication year and rotates
-  slightly each week. Pattern marks topic: solid for treatment and
-  mutation papers, stripes for diagnosis, pathology and guidelines, dots for genomics, rings for immunotherapy,
-  crosshatch for other topics. A starburst marks a paper cited this week, one ray per new citation.
+  slightly each week. A starburst marks a paper cited this week, one ray per new citation.
   Hover for details, click to open the paper in OpenAlex. <a href="gallery.html">Past weeks</a>
 </div>
 <script src="vendor/d3.min.js"></script>
@@ -67,7 +65,7 @@
     if (!l) { tip.style.display = "none"; return; }
     const w = l.data;
     tip.innerHTML = `${w.year} | ${w.cites.toLocaleString("en-US")} citations` +
-      (w.fresh ? ` | +${w.fresh} this week` : "") + `<br>${Mosaic.GROUPS[w.group]}`;
+      (w.fresh ? ` | +${w.fresh} this week` : "") + ``;
     tip.style.left = ev.clientX + 14 + "px"; tip.style.top = ev.clientY + 14 + "px";
     tip.style.display = "block";
   });

@@ -6,9 +6,8 @@ Generative art from a citation record. Each week a GitHub Action pulls citation 
 
 - Each cell is one paper (the 200 most cited, configurable). Cell area scales with total citations.
 - Hue follows publication year. The whole palette rotates a little each week.
-- Pattern marks the OpenAlex primary topic: solid for lung cancer treatment and mutation papers, stripes for diagnosis, pathology and guidelines, dots for genomics, rings for immunotherapy, crosshatch for other topics.
 - A starburst marks a paper that gained citations since the last run, one ray per new citation. This layer starts after the second weekly run, once there is a previous snapshot to compare against.
-- Randomness: the cell layout, color jitter, gradient direction and pattern angles come from a random number generator seeded with the snapshot date and total citation count. Each week's image is unique, and any past image can be regenerated exactly.
+- Randomness: the cell layout, color jitter and gradient direction come from a random number generator seeded with the snapshot date and total citation count. Each week's image is unique, and any past image can be regenerated exactly.
 
 ## Layout
 

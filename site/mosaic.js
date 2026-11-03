@@ -1,6 +1,6 @@
 // Paper mosaic: each cell is one paper, cell area scales with citations.
-// Hue comes from publication year, the inner pattern from topic group,
-// and seeded randomness sets cell layout, color jitter and pattern angles.
+// Hue comes from publication year, and seeded randomness sets cell layout,
+// color jitter and gradient direction.
 // Runs in the browser (GitHub Pages) and in headless Chromium (GitHub Actions).
 (function () {
   const GROUPS = {
@@ -65,7 +65,6 @@
       baseC.l = Math.max(0.55, Math.min(0.85, baseC.l + rand(-0.05, 0.04)));
       const base = baseC.formatHex();
       const deep = d3.hsl(baseC.h - 12, baseC.s, baseC.l * 0.86).formatHex();
-      const accent = d3.hsl(baseC.h + rand(-20, 20), baseC.s * 0.6, Math.min(0.96, baseC.l + 0.14)).formatHex();
       const [cx, cy] = d3.polygonCentroid(poly);
       const r = Math.sqrt(Math.abs(d3.polygonArea(poly)));
 
@@ -83,19 +82,6 @@
       g.addColorStop(1, deep);
       ctx.fillStyle = g;
       ctx.fillRect(cx - r * 2, cy - r * 2, r * 4, r * 4);
-
-      // Topic pattern
-      ctx.strokeStyle = accent;
-      ctx.fillStyle = accent;
-      const step = Math.max(6, r * rand(0.08, 0.14));
-      if (w.group === "D") stripes(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.2);
-      else if (w.group === "G") dots(ctx, cx, cy, r, step, rand(0, Math.PI), step * 0.15);
-      else if (w.group === "I") rings(ctx, cx, cy, r, step);
-      else if (w.group === "O") {
-        const a = rand(0, Math.PI);
-        stripes(ctx, cx, cy, r, step, a, step * 0.1);
-        stripes(ctx, cx, cy, r, step, a + Math.PI / 2, step * 0.1);
-      }
 
       // Papers that gained citations this week get a burst with one ray per citation
       if (w.fresh > 0) burst(ctx, cx, cy, r, w.fresh, rng);
@@ -132,39 +118,8 @@
     ctx.closePath();
   }
 
-  function stripes(ctx, cx, cy, r, step, angle, width) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-    ctx.lineWidth = width;
-    ctx.globalAlpha = 0.4;
-    for (let x = -r * 2; x <= r * 2; x += step) {
-      ctx.beginPath(); ctx.moveTo(x, -r * 2); ctx.lineTo(x, r * 2); ctx.stroke();
-    }
-    ctx.restore();
-  }
 
-  function dots(ctx, cx, cy, r, step, angle, radius) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-    ctx.globalAlpha = 0.45;
-    for (let x = -r * 2; x <= r * 2; x += step)
-      for (let y = -r * 2; y <= r * 2; y += step) {
-        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
-      }
-    ctx.restore();
-  }
 
-  function rings(ctx, cx, cy, r, step) {
-    ctx.save();
-    ctx.lineWidth = step * 0.16;
-    ctx.globalAlpha = 0.4;
-    for (let rr = step; rr < r * 2; rr += step) {
-      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
-    }
-    ctx.restore();
-  }
 
   function burst(ctx, cx, cy, r, n, rng) {
     ctx.save();
